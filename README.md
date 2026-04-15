@@ -3,12 +3,13 @@
 > 为各行业客户快速生成专业静态营销网页的 Claude Code Skill，遵循伙伴云零代码设计规范，可一键部署至伙伴云平台。
 
 ## 概述
-
 AI 建站工具可在 30 秒内生成网站，但数据显示 AI 生成的网站仅 **0.026%** 长期保持活跃。问题不在技术，在于**缺乏差异化和场景深度**。
 
 本 Skill 通过系统化的定位方法论 + 27 种设计风格 + 反趋同案例库，解决这一问题。
 
 **赢家公式 = 深度定位 + 场景专属设计 + 风格多样性**
+
+注意：经过测试，目前只有 Claudecode 才能保证生成的效果，其他模型生成质量较差
 
 ## 触发词
 
@@ -57,7 +58,7 @@ hb-website-creator/
 
 ## 安装
 
-将整个目录放入 Claude Code 的 Skills 路径，或参考 [Claude Code Skill 文档](https://docs.anthropic.com/claude-code) 安装。
+和Claudecode 说：帮我安装 skill（https://github.com/sunset2333/hb-website-creator/）
 
 ## 技术栈
 
