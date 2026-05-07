@@ -1,6 +1,6 @@
 # hb-website-creator
 
-> 为各行业客户快速生成专业静态营销网页的 Claude Code Skill，遵循伙伴云零代码设计规范，可一键部署至伙伴云平台。
+> 为各行业客户快速生成专业静态营销网页的 Claude Code Skill。
 
 [![预览示例](assets/preview.png)](https://site.huoban.com/siyuzhan)
 点击图片查看详细介绍
