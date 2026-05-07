@@ -35,22 +35,16 @@ AI 建站工具可在 30 秒内生成网站，但数据显示 AI 生成的网站
 - **27 种设计风格**：简洁清爽、暗黑酷感、编辑杂志、高端奢华、多彩活力……
 - **反趋同机制**：通过 10+ 真实案例库，确保每个网站有差异化设计方向
 - **图片策略**：Unsplash 占位图 / 本地素材 / 混合方案，带替换标准
-- **伙伴云部署**：生成 React + Less 架构（site-widget），可直接部署至伙伴云自定义组件
 
 ## 目录结构
 
 ```
 hb-website-creator/
 ├── SKILL.md              # Skill 主文件（Claude Code 读取）
-├── assets/
-│   └── template/         # Vite + React 项目模板
-│       ├── index.html
-│       ├── package.json
-│       └── vite.config.js
 ├── references/
 │   ├── case-library.md   # 案例索引（反趋同检查用）
 │   ├── design-guide.md   # 设计决策指南（五步方法论）
-│   ├── technical-spec.md # 技术规范（React + Less 架构）
+│   ├── technical-spec.md # 技术规范（纯静态 HTML/CSS/JS）
 │   ├── cases/            # 10+ 真实项目案例详情
 │   ├── combos/           # 8 种页面风格组合包
 │   ├── styles/           # 设计风格库
@@ -65,23 +59,19 @@ hb-website-creator/
 
 ## 技术栈
 
-生成的网站使用 **React + Less（site-widget 架构）**：
+生成的网站使用**纯静态 HTML/CSS/JS**：
 
-- 所有页面组件集中在 `widget.jsx`，通过 URL 参数路由
-- 样式写在 `style.less`，作用域锁定在 `.site-widget` 选择器
-- 本地预览：`npm install && npm run dev`（Vite，端口 3000）
-- 部署：将构建产物上传至伙伴云自定义组件
+- 每个页面是独立的 `.html` 文件，双击即可在浏览器中直接打开
+- CSS 内联在 `<style>` 标签，JS 内联在 `<script>` 标签，无框架依赖
+- 如需本地起 http 服务，可用 `python3 -m http.server`
 
 ## 版本记录
 
 | 版本 | 主要变更 |
 |------|---------|
-| v1.51 | 修复 portal wrapper 导致首屏空白问题 |
-| v1.5 | 增加设计规范和 demo 预览策略 |
-| v1.4 | 增加图片素材策略 + 去 AI 味提示词 |
-| v1.3 | 面向用户重新设计对话体验流程 |
-| v1.2 | Token 用量及架构优化 |
-| v1.1 | 合并 HTML 转伙伴云自定义组件能力 |
+| v1.3 | 增加图片素材策略 + 去 AI 味提示词 |
+| v1.2 | 面向用户重新设计对话体验流程 |
+| v1.1 | Token 用量及架构优化 |
 
 ## License
 
