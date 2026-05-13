@@ -14,9 +14,9 @@
 
 ## 技术栈
 
-**纯静态 HTML**，每个页面为独立的 `.html` 文件，内联 CSS（`<style>` 标签）和少量 JS（`<script>` 标签）。不使用任何框架（React、Vue、Angular、Bootstrap、Tailwind 等）。
+**纯静态 HTML 单文件架构**，整个网站只有一个 `index.html`，内联 CSS（`<style>` 标签）和 JS（`<script>` 标签）。不使用任何框架（React、Vue、Angular、Bootstrap、Tailwind 等），不生成独立的 `.css` 或 `.js` 文件。
 
-每个 `.html` 文件是**完全自包含**的——双击即可在浏览器中打开。
+`index.html` 是**完全自包含**的——双击即可在浏览器中打开，也支持 Claude Code 右侧预览面板直接预览。
 
 ---
 
@@ -24,23 +24,66 @@
 
 ```
 site/
-├── index.html          ← 首页（必选）
-├── [page-2].html       ← 按设计文档页面清单命名
-├── [page-3].html       ← 按设计文档页面清单命名
-└── assets/             ← 图片/字体等静态资源
+├── index.html          ← 唯一的 HTML 文件（包含所有页面）
+└── assets/             ← 图片等静态资源
 ```
 
-页面文件名由**设计文档的页面清单**决定，不预设固定结构。
+**无论单页还是多页网站，都只生成一个 `index.html`。** 多页通过 hash 路由切换。
 
 ---
 
 ## HTML 架构规则
 
-1. **每个页面是一个独立的 `.html` 文件**，包含完整的 `<!DOCTYPE html>`、`<head>`、`<body>`
-2. **CSS 内联在 `<style>` 标签中**，位于 `<head>` 内。不使用外部 `.css` 文件
-3. **JS 内联在 `<script>` 标签中**，位于 `</body>` 前。仅用于交互功能
-4. **导航栏和页脚在每个页面中都完整写出**，确保每个文件独立可用
-5. **页面间链接使用相对路径**：`<a href="about.html">`
+1. **整个网站是一个 `index.html` 文件**，包含完整的 `<!DOCTYPE html>`、`<head>`、`<body>`
+2. **CSS 内联在 `<style>` 标签中**，位于 `<head>` 内。**禁止生成独立 `.css` 文件**
+3. **JS 内联在 `<script>` 标签中**，位于 `</body>` 前。**禁止生成独立 `.js` 文件**
+4. **使用 CSS class 组织样式**（如 `.hero`, `.card`, `.features`），保持代码干净精简
+5. **多页网站用 hash 路由**：每个「页面」是 `<div class="page" id="page-xxx">`，导航用 `<a href="#xxx">`
+
+### 多页 hash 路由规则
+
+```html
+<!-- 导航链接 -->
+<a href="#home">首页</a>
+<a href="#about">关于</a>
+
+<!-- 页面容器 -->
+<div class="page active" id="page-home">
+  <section class="hero">...</section>
+  <section class="features">...</section>
+</div>
+<div class="page" id="page-about">
+  <section class="about-hero">...</section>
+</div>
+
+<!-- 路由 CSS -->
+<style>
+.page { display: none; }
+.page.active { display: block; }
+</style>
+
+<!-- 路由 JS -->
+<script>
+function router() {
+  const hash = location.hash.slice(1) || 'home';
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-' + hash);
+  if (target) {
+    target.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  // 更新导航激活状态
+  document.querySelectorAll('.nav__links a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + hash);
+  });
+}
+window.addEventListener('hashchange', router);
+window.addEventListener('DOMContentLoaded', router);
+</script>
+```
+
+- 导航栏和页脚**只写一次**，放在所有 `.page` 容器的外面（全局共享）
+- 单页网站不需要路由，直接用锚点滚动即可
 
 ---
 
@@ -119,26 +162,22 @@ site/
 
 ## 导航栏模板
 
-**注意：导航项名称和链接必须从设计文档页面清单填入，不得使用示例内容。**
+**注意：导航项名称和链接必须从设计文档页面清单填入，不得使用示例内容。多页网站使用 hash 链接。**
+
+**禁止折叠/汉堡菜单**：移动端导航必须平铺显示所有导航项，不使用 hamburger icon 或抽屉菜单。
 
 ```html
 <nav class="nav">
   <div class="nav__inner">
-    <a href="index.html" class="nav__brand">[品牌名 — 从设计文档填入]</a>
+    <a href="#home" class="nav__brand">[品牌名 — 从设计文档填入]</a>
     <ul class="nav__links">
-      <!-- 按设计文档页面清单逐项填入，示例：-->
-      <li><a href="index.html">[首页导航文字]</a></li>
-      <li><a href="[page-2].html">[第2页导航文字]</a></li>
-      <li><a href="[page-3].html">[第3页导航文字]</a></li>
-      <li><a href="[contact].html" class="nav__cta">[CTA文字 — 用行动导向语言]</a></li>
+      <!-- 按设计文档页面清单逐项填入，使用 hash 链接 -->
+      <li><a href="#home">[首页导航文字]</a></li>
+      <li><a href="#[page-2]">[第2页导航文字]</a></li>
+      <li><a href="#[page-3]">[第3页导航文字]</a></li>
+      <li><a href="#[contact]" class="nav__cta">[CTA文字 — 用行动导向语言]</a></li>
       <li><a href="#" class="nav__auth">登入/注册</a></li>
     </ul>
-    <button class="nav__toggle" onclick="document.querySelector('.nav__mobile').classList.toggle('open')">
-      <i class="fas fa-bars"></i>
-    </button>
-  </div>
-  <div class="nav__mobile">
-    <!-- 与上方保持一致 -->
   </div>
 </nav>
 ```
@@ -329,28 +368,108 @@ lightbox.addEventListener('click', e => { if(e.target === lightbox) lightbox.sty
 
 ---
 
-## 移动端导航
+## 移动端适配规范
+
+### 导航栏（平铺，禁止折叠）
+
+移动端导航**必须平铺显示所有导航项**，禁止使用 hamburger 菜单、抽屉菜单、折叠面板等隐藏式导航。
 
 ```css
-.nav__toggle { display: none; }
-.nav__mobile { display: none; }
+/* 桌面端：水平排列 */
+.nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+.nav__links {
+  display: flex;
+  list-style: none;
+  gap: 1.5rem;
+  align-items: center;
+}
 
+/* 移动端：品牌名居中或靠左，导航项换行平铺 */
 @media (max-width: 768px) {
-  .nav__links { display: none; }
-  .nav__toggle { display: block; }
-  .nav__mobile.open {
-    display: flex; flex-direction: column;
-    position: fixed; top: 60px; left: 0; right: 0; bottom: 0;
-    background: var(--color-bg-dark);
-    align-items: center; justify-content: center; gap: 2rem;
-    z-index: 999;
+  .nav__inner {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
   }
-  .nav__mobile a {
-    color: var(--color-text-on-dark);
-    font-size: 1.5rem; text-decoration: none;
+  .nav__brand {
+    width: 100%;
+    text-align: center;
+  }
+  .nav__links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1rem;
+  }
+  .nav__links a {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.6rem;
   }
 }
 ```
+
+如果导航项超过 5 个，移动端使用水平滚动条：
+```css
+@media (max-width: 768px) {
+  .nav__links {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* 隐藏滚动条 */
+    padding-bottom: 0.25rem;
+  }
+  .nav__links::-webkit-scrollbar { display: none; }
+  .nav__links li { flex-shrink: 0; }
+}
+```
+
+### 布局适配规则
+
+```css
+@media (max-width: 768px) {
+  /* 多列布局降为单列 */
+  .grid-2col, .grid-3col, .grid-4col {
+    grid-template-columns: 1fr;
+  }
+
+  /* 图文并排改为上下堆叠 */
+  .split-layout {
+    flex-direction: column;
+  }
+
+  /* 标题字号缩放 */
+  h1 { font-size: clamp(1.75rem, 6vw, 3rem); }
+  h2 { font-size: clamp(1.35rem, 4vw, 2.25rem); }
+
+  /* Section 内边距缩小 */
+  section { padding: 3rem 1rem; }
+
+  /* Hero 区高度适配 */
+  .hero { min-height: 80vh; padding: 4rem 1rem 3rem; }
+
+  /* 按钮全宽 */
+  .btn { width: 100%; text-align: center; }
+
+  /* 卡片间距缩小 */
+  .card-grid { gap: 1rem; }
+
+  /* 隐藏纯装饰元素 */
+  .decorative { display: none; }
+}
+```
+
+### 触控友好
+
+- 所有可点击元素最小尺寸 **44×44px**（WCAG 2.5.5）
+- 按钮和链接之间最小间距 **8px**，防止误触
+- 输入框高度 ≥ **48px**
 
 ---
 
@@ -358,13 +477,15 @@ lightbox.addEventListener('click', e => { if(e.target === lightbox) lightbox.sty
 
 **注意：以下模板中所有 `[填入]` 占位符必须替换为实际内容，不得保留。**
 
+### 单页网站模板
+
 ```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>[页面标题] - [品牌名]</title>
+  <title>[品牌名] - [一句话定位]</title>
   <meta name="description" content="[页面描述]" />
   
   <!-- 字体：根据字体选择规则填入 -->
@@ -375,7 +496,6 @@ lightbox.addEventListener('click', e => { if(e.target === lightbox) lightbox.sty
 
   <style>
     :root {
-      /* 颜色：从设计文档填入，禁止使用占位颜色 */
       --color-primary: [主色];
       --color-accent:  [辅色];
       --color-bg:      [背景色];
@@ -384,8 +504,66 @@ lightbox.addEventListener('click', e => { if(e.target === lightbox) lightbox.sty
       --color-text-muted: [辅助文字色];
       --color-text-on-dark: rgba(255,255,255,0.95);
       --color-border:  rgba(0,0,0,0.08);
+      --font-body:    [字体栈];
+      --font-display: [标题字体栈];
+    }
 
-      /* 字体：从字体选择规则填入 */
+    @media (prefers-color-scheme: dark) {
+      :root { /* 深色模式覆盖 */ }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font-body); background: var(--color-bg); color: var(--color-text); }
+
+    /* 导航栏、Section、页脚等样式用 class 组织 */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s, transform 0.6s; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <nav class="nav">...</nav>
+  <main>
+    <section class="hero" id="hero">...</section>
+    <!-- 更多 sections -->
+  </main>
+  <footer class="footer">...</footer>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
+```
+
+### 多页网站模板
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>[品牌名] - [一句话定位]</title>
+  <meta name="description" content="[页面描述]" />
+  
+  <link href="https://fonts.loli.net/css2?family=[英文字体]:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --color-primary: [主色];
+      --color-accent:  [辅色];
+      --color-bg:      [背景色];
+      --color-bg-dark: [深色背景];
+      --color-text:    [文字色];
+      --color-text-muted: [辅助文字色];
+      --color-text-on-dark: rgba(255,255,255,0.95);
+      --color-border:  rgba(0,0,0,0.08);
       --font-body:    [字体栈];
       --font-display: [标题字体栈];
     }
@@ -397,37 +575,69 @@ lightbox.addEventListener('click', e => { if(e.target === lightbox) lightbox.sty
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: var(--font-body); background: var(--color-bg); color: var(--color-text); }
 
-    /* 导航栏样式 */
-    /* Section 样式 */
-    /* 页脚样式 */
-    @media (max-width: 768px) { /* 移动端适配 */ }
+    /* 路由：页面显隐 */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* 导航栏、Section、页脚等样式用 class 组织 */
     .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s, transform 0.6s; }
     .reveal.visible { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
 
-  <!-- 导航栏：导航项从设计文档页面清单填入 -->
-  <nav class="nav">...</nav>
+  <!-- 导航栏（全局共享，只写一次） -->
+  <nav class="nav">
+    <div class="nav__inner">
+      <a href="#home" class="nav__brand">[品牌名]</a>
+      <ul class="nav__links">
+        <li><a href="#home">[首页]</a></li>
+        <li><a href="#about">[关于]</a></li>
+        <li><a href="#contact" class="nav__cta">[CTA文字]</a></li>
+        <li><a href="#" class="nav__auth">登入/注册</a></li>
+      </ul>
+    </div>
+  </nav>
 
-  <!-- 主内容：Section 顺序按设计文档规划 -->
-  <main>
+  <!-- 页面区块 -->
+  <div class="page active" id="page-home">
     <section class="hero">...</section>
-    <!-- 更多 sections，顺序和布局模式见设计文档 -->
-  </main>
+    <section class="features">...</section>
+  </div>
 
-  <!-- 页脚：与所有页面保持一致 -->
+  <div class="page" id="page-about">
+    <section class="about-hero">...</section>
+  </div>
+
+  <div class="page" id="page-contact">
+    <section class="contact-form">...</section>
+  </div>
+
+  <!-- 页脚（全局共享，只写一次） -->
   <footer class="footer">...</footer>
 
-  <!-- 交互脚本：按需选配，不要全选 -->
   <script>
-    // 基础：滚动渐入（必选）
+    // Hash 路由
+    function router() {
+      const hash = location.hash.slice(1) || 'home';
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const target = document.getElementById('page-' + hash);
+      if (target) {
+        target.classList.add('active');
+        window.scrollTo(0, 0);
+      }
+      document.querySelectorAll('.nav__links a[href^="#"]').forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + hash);
+      });
+    }
+    window.addEventListener('hashchange', router);
+    window.addEventListener('DOMContentLoaded', router);
+
+    // 滚动渐入
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
     }, { threshold: 0.1 });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-    // 按需追加其他交互...
   </script>
 </body>
 </html>
@@ -437,11 +647,15 @@ lightbox.addEventListener('click', e => { if(e.target === lightbox) lightbox.sty
 
 ## 质量检查清单
 
-- [ ] 每个 HTML 文件双击可在浏览器中直接打开
-- [ ] 导航栏在所有页面一致，链接互通，含「登入/注册」按钮
-- [ ] 页脚一致
-- [ ] **所有颜色通过 CSS 变量定义，无任何硬编码颜色字面量**
+- [ ] 只有一个 `index.html` 文件，无独立 `.css` 或 `.js` 文件
+- [ ] `index.html` 双击可在浏览器中直接打开
+- [ ] 支持 Claude Code preview 工具预览
+- [ ] 多页网站 hash 路由正常工作，默认显示首页
+- [ ] 导航栏 hash 链接与页面容器 id 匹配，含「登入/注册」按钮
+- [ ] 页脚正常显示
+- [ ] **所有颜色通过 CSS 变量定义，无任何硬编码颜色字面量**（`:root` 定义除外）
 - [ ] **无任何 `[填入]` 占位符残留**
+- [ ] 样式用 CSS class 组织，代码干净精简
 - [ ] 图片有 alt 文本和 loading="lazy"
 - [ ] 深色模式正确适配
 - [ ] 移动端响应式正常

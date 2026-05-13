@@ -603,7 +603,7 @@ Step 6 产出两个版本：先给用户看**确认版**，等用户确认后再
 [用一两句话描述：你是做什么的、服务谁、核心价值是什么]
 
 **网站定位**
-[说明建议做什么类型的网站（单页/多页/几页），以及原因]
+[说明建议做什么类型的网站（单页/多页/几页），以及原因。注意：无论单页还是多页，最终都生成单个 index.html 文件，多页通过 hash 路由切换]
 
 **核心信息**
 - 明线（用户能直接感知的价值）：[具体描述]
@@ -659,8 +659,8 @@ Step 6 产出两个版本：先给用户看**确认版**，等用户确认后再
 ## 七支柱设计回答
 
 ## 页面结构规划
-- 单页 or 多页
-- 页面清单 + 导航顺序
+- 单页 or 多页（均为单文件 index.html，多页用 hash 路由）
+- 页面清单 + 导航顺序 + 对应 hash 值
 
 ## 各页面 Section 规划
 （section 顺序 + 布局模式，相邻不重复）
@@ -738,8 +738,50 @@ Step 6 产出两个版本：先给用户看**确认版**，等用户确认后再
 ### 生成前准备
 
 **⚠️ 生成文件必须放到 skill 目录之外。**
-- 所有项目文件（HTML、CSS、JS、assets/ 等）生成到用户指定目录，或默认放到 `~/Desktop/[品牌名]-website/`
+- 所有项目文件（`index.html` + `assets/`）生成到用户指定目录，或默认放到 `~/Desktop/[品牌名]-website/`
 - **禁止在 skill 目录内（`hb-website-creator/`）创建任何项目文件**，包括临时文件
+
+### 单文件架构（核心规则）
+
+**无论单页还是多页网站，最终只生成一个 `index.html` 文件。**
+
+- **所有 CSS 内联在 `<style>` 标签中**，不生成独立 `.css` 文件
+- **所有 JS 内联在 `<script>` 标签中**，不生成独立 `.js` 文件
+- **多页网站用 hash 路由实现页面切换**：每个「页面」是一个 `<div class="page" id="page-xxx">` 容器，通过 JS 监听 `hashchange` 显示/隐藏
+- 使用 CSS class 组织样式（如 `.hero`, `.features`, `.card`），保持代码干净精简，避免大段重复的内联 style 属性
+- 这样做的目的：**支持 Claude Code 右侧预览面板直接预览**（preview 工具只能预览单个 HTML 入口）
+
+**多页路由实现模式**：
+```html
+<!-- 导航链接用 hash -->
+<a href="#home">首页</a>
+<a href="#about">关于</a>
+<a href="#contact">联系</a>
+
+<!-- 每个页面是一个容器 -->
+<div class="page active" id="page-home">...</div>
+<div class="page" id="page-about">...</div>
+<div class="page" id="page-contact">...</div>
+
+<style>
+.page { display: none; }
+.page.active { display: block; }
+</style>
+
+<script>
+function router() {
+  const hash = location.hash.slice(1) || 'home';
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-' + hash);
+  if (target) {
+    target.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+}
+window.addEventListener('hashchange', router);
+window.addEventListener('DOMContentLoaded', router);
+</script>
+```
 
 ### 生成约束（每页必须遵守）
 
@@ -748,8 +790,8 @@ Step 6 产出两个版本：先给用户看**确认版**，等用户确认后再
 3. **结构**：Section 顺序严格按设计文档规划
 4. **首屏**：必须包含「标题 + 副标题 + CTA 按钮」三要素
 5. **CTA**：每页至少 2 个，文案用第一人称行动导向（"立即咨询" > "联系我们"）
-6. **导航栏**：Navbar 必须包含「登入/注册」按钮（`<a href="#">`，链接后期替换），与主CTA按钮并列
-7. **自检**：每个页面完成后，列出该页的 CTA 数量和位置，确认 ≥ 2 个；确认 Navbar 包含登入/注册按钮
+6. **导航栏**：Navbar 必须包含「登入/注册」按钮（`<a href="#">`，链接后期替换），与主CTA按钮并列；多页导航链接用 `href="#pagename"` 格式；**禁止使用汉堡菜单/折叠导航**，移动端导航项必须平铺可见
+7. **自检**：每个页面区块完成后，列出该页的 CTA 数量和位置，确认 ≥ 2 个；确认 Navbar 包含登入/注册按钮
 8. **视觉素材使用**（根据图片素材策略中判定的类型执行）：
    - **摄影驱动型**（实体产品/线下服务）：
      - Hero section 必须使用全幅背景图（CSS `background-image` + 半透明遮罩层确保文字可读）
@@ -768,12 +810,20 @@ Step 6 产出两个版本：先给用户看**确认版**，等用户确认后再
    - 至少 1 个 section 使用 CSS Grid 不等分列（如 `grid-template-columns: 1fr 1.5fr`）
    - 背景处理：Hero 用 `linear-gradient` overlay + `background-image`；至少 1 个中间 section 用渐变或纹理背景
    - 按钮 hover 必须有 `transform` + `box-shadow` 组合效果；卡片 hover 必须有 `translateY(-4px)` + shadow 加深
+10. **移动端适配**（必须在每个页面区块中实现）：
+    - **导航栏禁止折叠/汉堡菜单**：移动端导航必须平铺显示所有导航项（换行或水平滚动），不使用 hamburger icon
+    - 多列网格（2col/3col/4col）在 `≤768px` 时降为单列
+    - 图文并排布局在移动端改为上下堆叠
+    - 标题使用 `clamp()` 实现响应式字号（如 `font-size: clamp(1.75rem, 6vw, 3rem)`）
+    - 按钮在移动端全宽显示
+    - 所有可点击元素最小 44×44px（触控友好）
+    - Hero 区高度适配：移动端 `min-height: 80vh`，内边距缩减
 
 ### 生成顺序
 
-逐页生成，格式：
+逐页面区块生成，格式：
 ```
-✅ [页面名].html 完成 — CTA 位置：[首屏按钮] + [底部按钮]
+✅ [页面名] 区块完成 — CTA 位置：[首屏按钮] + [底部按钮]
 进度：X/X 页
 ```
 
@@ -781,26 +831,48 @@ Step 6 产出两个版本：先给用户看**确认版**，等用户确认后再
 
 ---
 
-## Step 8：交付检查
+## Step 8：交付检查与预览
 
-所有页面生成后，**必须执行以下 4 个动作**（不是自我对照清单，是真实操作）：
+所有页面区块生成后，**必须执行以下 6 个动作**（不是自我对照清单，是真实操作）：
 
-### 必须做的 4 件事
+### 必须做的 6 件事
 
 **① CTA 可见性检查**
 打开 `index.html` 代码，找到 Hero section，确认 CTA 按钮在首屏 fold 以上。如果不在，立即移动位置。
 
 **② 色彩一致性检查**
-在所有 HTML 文件中搜索硬编码颜色（如 `#FF0000`、`color: red`），发现即修复，改为 CSS 变量。
+在 `index.html` 中搜索硬编码颜色（如 `#FF0000`、`color: red`），发现即修复，改为 CSS 变量。`:root` 中的变量定义除外。
 
-**③ 导航完整性检查**
-确认每个 HTML 文件的导航栏链接都指向正确文件，不存在死链或路径错误。确认每页 Navbar 都包含「登入/注册」按钮。
+**③ 导航与路由检查**
+- 确认导航栏所有链接的 hash 值与对应 `<div class="page" id="page-xxx">` 的 id 匹配
+- 确认 hash 路由 JS 正常工作（默认显示首页）
+- 确认 Navbar 包含「登入/注册」按钮
 
 **④ 图片完整性检查**
 - 确认 `assets/` 目录包含设计文档图片策略中规划的所有图片文件
 - 确认 Hero section 使用了背景图（不是纯色背景）
-- 确认每个页面至少有 1 个 section 包含图片元素
+- 确认每个页面区块至少有 1 个 section 包含图片元素
 - 确认 Unsplash 图片已下载到 `assets/` 并按 `{page}_{element}_{desc}.{ext}` 正确命名
+
+**⑤ 移动端适配检查**
+用 `preview_resize` 将预览窗口切换到移动端尺寸（375×812），逐项验证：
+1. 导航栏是否平铺显示所有导航项（**不能出现汉堡菜单/折叠图标**）
+2. 多列网格是否已降为单列
+3. 图文并排是否已改为上下堆叠
+4. 标题字号是否正常缩放（不溢出、不过小）
+5. 按钮是否全宽可点、间距合理
+6. Hero 区高度和内边距是否适配
+7. `preview_screenshot` 截取移动端首屏效果
+8. 验证完毕后用 `preview_resize` 切回桌面端尺寸（1280×800）
+
+**⑥ Claude Code 预览验证**
+使用 preview 工具启动本地预览服务器，在 Claude Code 右侧面板中验证网站效果：
+1. `preview_start` 启动预览（指向项目目录）
+2. `preview_screenshot` 截图确认桌面端首屏效果
+3. 如果是多页网站，用 `preview_eval` 执行 `location.hash = '#about'` 等切换页面，逐页截图验证
+4. `preview_console_logs` 检查是否有 JS 错误
+5. 执行上方⑤移动端适配检查
+6. 发现问题立即修复，修复后重新截图确认
 
 发现问题 → 立即修复 → 修复后标注 `[已修复]`。
 
@@ -812,20 +884,20 @@ Step 6 产出两个版本：先给用户看**确认版**，等用户确认后再
 📁 项目目录：~/Desktop/[品牌名]-website/
 
 文件清单：
-- index.html（首页）
-- [page-2].html
-- [page-3].html
+- index.html（单文件，包含所有页面：首页/关于/[其他页面]）
 - assets/（共 X 个图片文件）
 
 已完成检查：
 ✅ Hero CTA 首屏可见
-✅ 无硬编码颜色
-✅ 导航链接完整，含登入/注册按钮
+✅ 无硬编码颜色（:root 变量定义除外）
+✅ 导航 hash 路由正常，含登入/注册按钮
 ✅ 图片完整（X 张，Hero 背景图已配置）
+✅ 移动端适配通过（导航平铺、单列布局、字号缩放、按钮全宽）
+✅ Claude Code 预览验证通过（桌面端 + 移动端）
 
-🖥️ 本地预览：
-双击 ~/Desktop/[品牌名]-website/index.html 即可在浏览器中直接打开。
-如果用到 fetch/ES module，可改用：cd ~/Desktop/[品牌名]-website && python3 -m http.server 8000
+🖥️ 预览方式：
+- Claude Code：已在右侧面板预览验证
+- 本地：双击 ~/Desktop/[品牌名]-website/index.html 即可在浏览器中直接打开
 
 📷 图片替换指南：
 
