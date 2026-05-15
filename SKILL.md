@@ -790,9 +790,16 @@ window.addEventListener('DOMContentLoaded', router);
 3. **结构**：Section 顺序严格按设计文档规划
 4. **首屏**：必须包含「标题 + 副标题 + CTA 按钮」三要素
 5. **CTA**：每页至少 2 个，文案用第一人称行动导向（"立即咨询" > "联系我们"）
-6. **导航栏**：Navbar 必须包含「登入/注册」按钮（`<a href="#">`，链接后期替换），与主CTA按钮并列；多页导航链接用 `href="#pagename"` 格式；**禁止使用汉堡菜单/折叠导航**，移动端导航项必须平铺可见
-7. **自检**：每个页面区块完成后，列出该页的 CTA 数量和位置，确认 ≥ 2 个；确认 Navbar 包含登入/注册按钮
-8. **视觉素材使用**（根据图片素材策略中判定的类型执行）：
+6. **导航栏**：
+   - Navbar 必须包含「登入/注册」按钮（`<a href="#">`，链接后期替换），与主CTA按钮并列
+   - 多页导航链接用 `href="#pagename"` 格式
+   - ❌ **不要**语言切换器（CN/EN）— 静态站不真正实现，徒增视觉杂讯
+   - 移动端允许汉堡菜单，但必须满足"全屏覆盖 + 三条关闭路径 + 强视觉反馈"（详见第 10 条）
+7. **桌面端浮动按钮**：
+   - ❌ **不要**右下角"立即咨询"圆形浮动按钮 — 与导航 CTA 重复，遮挡内容，降低高级感
+   - 桌面端依赖导航栏 CTA 即可，移动端用底部固定栏（见第 10 条）
+8. **自检**：每个页面区块完成后，列出该页的 CTA 数量和位置，确认 ≥ 2 个；确认 Navbar 包含登入/注册按钮
+9. **视觉素材使用**（根据图片素材策略中判定的类型执行）：
    - **摄影驱动型**（实体产品/线下服务）：
      - Hero section 必须使用全幅背景图（CSS `background-image` + 半透明遮罩层确保文字可读）
      - 每页至少 1 个 section 包含照片元素
@@ -805,19 +812,53 @@ window.addEventListener('DOMContentLoaded', router);
      - 可用 unDraw (undraw.co) 下载 SVG 插画到 assets/
      - **禁止全部 section 都用全幅大图** —— 至少 50% 使用图文并排布局
    - **通用**：图片用 `<img src="assets/...">` 或 CSS `background-image: url(assets/...)` 引用
-9. **反AI感实施**：
-   - 首屏入场动画使用 staggered `animation-delay`（标题 0s → 副标题 0.2s → CTA 0.4s → 装饰元素 0.6s）
-   - 至少 1 个 section 使用 CSS Grid 不等分列（如 `grid-template-columns: 1fr 1.5fr`）
-   - 背景处理：Hero 用 `linear-gradient` overlay + `background-image`；至少 1 个中间 section 用渐变或纹理背景
-   - 按钮 hover 必须有 `transform` + `box-shadow` 组合效果；卡片 hover 必须有 `translateY(-4px)` + shadow 加深
-10. **移动端适配**（必须在每个页面区块中实现）：
-    - **导航栏禁止折叠/汉堡菜单**：移动端导航必须平铺显示所有导航项（换行或水平滚动），不使用 hamburger icon
+10. **反AI感实施**：
+    - 首屏入场动画使用 staggered `animation-delay`（标题 0s → 副标题 0.2s → CTA 0.4s → 装饰元素 0.6s）
+    - 至少 1 个 section 使用 CSS Grid 不等分列（如 `grid-template-columns: 1fr 1.5fr`）
+    - 背景处理：Hero 用 `linear-gradient` overlay + `background-image`；至少 1 个中间 section 用渐变或纹理背景
+    - 按钮 hover 必须有 `transform` + `box-shadow` 组合效果；卡片 hover 必须有 `translateY(-4px)` + shadow 加深
+11. **移动端适配**（必须在每个页面区块中实现）：
+
+    **基础布局**：
     - 多列网格（2col/3col/4col）在 `≤768px` 时降为单列
     - 图文并排布局在移动端改为上下堆叠
-    - 标题使用 `clamp()` 实现响应式字号（如 `font-size: clamp(1.75rem, 6vw, 3rem)`）
+    - 标题使用 `clamp()` 实现响应式字号（如 `font-size: clamp(1.75rem, 6vw, 3rem)`，Hero h1 建议 `max-width: 22ch`）
     - 按钮在移动端全宽显示
     - 所有可点击元素最小 44×44px（触控友好）
     - Hero 区高度适配：移动端 `min-height: 80vh`，内边距缩减
+    - `.hero { flex-direction: column }` 强制单列，装饰性 `.hero-meta`（SCROLL / 认证文字等）移动端隐藏
+
+    **汉堡菜单（如果使用）**：
+    - 菜单必须**全屏覆盖**（不是只在顶部 64px 内的折叠抽屉）
+    - 父级 `.nav` 在 `.menu-open` 时**关闭 `backdrop-filter`**（避免 containing block 陷阱困住 `position: fixed` 子元素）
+    - 汉堡按钮激活态有强视觉反馈（如橙红圆形填充 ✕，不是细线）
+    - 关闭路径必须有 3 条：点 X / 点导航链接自动关 / ESC 键
+    - 菜单底部固定 action 栏：登入/注册 + 主 CTA
+    - 菜单展开时底部 `.mobile-cta` 自动隐藏（避免重叠）
+
+    **移动端底部固定栏（必做）**：
+    - 双按钮结构：左侧「登入/注册」（透明描边）+ 右侧主 CTA（品牌色填充）
+    - **不要**用电话号码作为按钮文案（用通用语义按钮，如"立即咨询"）
+    - 必须 `padding-bottom: env(safe-area-inset-bottom)` 适配刘海屏
+    - 必须 `min-height: 44px` 满足触控可达性
+    - `body { padding-bottom: 80px }` 防止内容被底部栏遮挡
+
+    **对齐策略（按内容类型分类，不能盲目居中）**：
+    - Hero / 数据看板：居中
+    - CTA 联系区（HOTLINE / EMAIL / ADDRESS）/ 正文阅读区：**左对齐**
+    - 4 格 stats / 2×2 meta：每格内容居中
+    - 末尾单按钮：`margin: 0 auto` 居中
+
+    **数据网格等高对齐**：
+    - Stats：`min-height` + `white-space: nowrap` + `margin-top: auto` 三件套
+    - 末尾孤立单元格：`:nth-last-child(1):nth-child(odd) { grid-column: 1/-1 }` 跨满
+
+    **Footer 移动端**：
+    - 2 列网格均匀分布（不能全堆左侧）
+    - 二维码与说明文字**上下堆叠**（不并排），二维码居中
+    - footer-bottom 居中或左右分布，不全部左对齐
+
+    **Logo 跨背景**：当 Logo 出现在多种背景（Header 浅色 / Footer 深色 / Hero 大图）时，主体色与背景色不能相近。如用户只提供 1 份 Logo，深色 section 用白色圆形/矩形底衬或 CSS filter 反白。详见 `references/technical-spec.md`
 
 ### 生成顺序
 
@@ -854,16 +895,54 @@ window.addEventListener('DOMContentLoaded', router);
 - 确认每个页面区块至少有 1 个 section 包含图片元素
 - 确认 Unsplash 图片已下载到 `assets/` 并按 `{page}_{element}_{desc}.{ext}` 正确命名
 
-**⑤ 移动端适配检查**
-用 `preview_resize` 将预览窗口切换到移动端尺寸（375×812），逐项验证：
-1. 导航栏是否平铺显示所有导航项（**不能出现汉堡菜单/折叠图标**）
-2. 多列网格是否已降为单列
-3. 图文并排是否已改为上下堆叠
-4. 标题字号是否正常缩放（不溢出、不过小）
-5. 按钮是否全宽可点、间距合理
-6. Hero 区高度和内边距是否适配
-7. `preview_screenshot` 截取移动端首屏效果
-8. 验证完毕后用 `preview_resize` 切回桌面端尺寸（1280×800）
+**⑤ 移动端规范检查**
+用 `preview_resize` 切到 375×812（**实际预览，不是看代码**），逐分类验证：
+
+**导航与菜单**：
+- 汉堡菜单点击后，菜单**全屏覆盖**（不是只在顶部 64px 内）✓
+- 父级 `.nav` 在 `.menu-open` 时**关闭 `backdrop-filter`**（避免 containing block 陷阱）✓
+- 汉堡按钮激活态有强视觉反馈（橙红圆形填充 ✕，不是细线）✓
+- 菜单关闭有 3 条路径：点 X / 点链接自动关 / ESC 键 ✓
+- 菜单底部固定 action 栏：登入/注册 + 主 CTA ✓
+- 菜单展开时底部 `.mobile-cta` 自动隐藏（避免重叠）✓
+
+**Hero 区**：
+- `.hero { flex-direction: column }` 强制单列（避免左右分栏）✓
+- 装饰性 `.hero-meta`（SCROLL/认证文字等）移动端隐藏 ✓
+- Hero h1 字号 ≤ `clamp(36px, 4.6vw, 64px)` + `max-width: 22ch` ✓
+
+**对齐策略**（按内容类型）：
+- Hero / 数据看板：居中 ✓
+- CTA 联系区（HOTLINE/EMAIL/ADDRESS）/ 正文阅读区：**左对齐**（不能盲目居中）✓
+- 4 格 stats / 2×2 meta：每格内容居中 ✓
+- 末尾单按钮：`margin: 0 auto` 居中 ✓
+
+**数据网格**：
+- Stats：`min-height` + `white-space: nowrap` + `margin-top: auto` 三件套 ✓
+- 末尾孤立单元格：`:nth-last-child(1):nth-child(odd) { grid-column: 1/-1 }` 跨满 ✓
+
+**Footer**：
+- 2 列网格均匀分布（不能全堆左侧）✓
+- 二维码与文字**上下堆叠**（不并排），二维码居中 ✓
+
+**底部固定栏**：
+- 左：登入/注册（透明描边）右：主 CTA（品牌色）— 不要用电话号码 ✓
+- `padding-bottom: env(safe-area-inset-bottom)` 适配刘海屏 ✓
+- 触控目标 ≥ 44px ✓
+- `body { padding-bottom: 80px }` 防内容被遮 ✓
+
+**桌面端禁项**：
+- ❌ 右下角"立即咨询"圆形浮动按钮（与导航 CTA 重复，廉价感）
+- ❌ 导航栏 CN/EN 语言切换器（静态站不真正实现）
+
+**通用布局**：
+- 多列网格是否已降为单列 ✓
+- 图文并排是否已改为上下堆叠 ✓
+- 标题字号是否正常缩放（不溢出、不过小）✓
+- 按钮是否全宽可点、间距合理 ✓
+- Hero 区高度和内边距是否适配 ✓
+
+最后 `preview_screenshot` 截取移动端首屏，验证完毕用 `preview_resize` 切回 1280×800。
 
 **⑥ Claude Code 预览验证**
 使用 preview 工具启动本地预览服务器，在 Claude Code 右侧面板中验证网站效果：
@@ -890,9 +969,19 @@ window.addEventListener('DOMContentLoaded', router);
 已完成检查：
 ✅ Hero CTA 首屏可见
 ✅ 无硬编码颜色（:root 变量定义除外）
-✅ 导航 hash 路由正常，含登入/注册按钮
+✅ 导航 hash 路由正常，含登入/注册按钮（无 CN/EN 切换器）
+✅ Logo 在所有背景下清晰可见（Header/Footer/Hero/深色section）
 ✅ 图片完整（X 张，Hero 背景图已配置）
-✅ 移动端适配通过（导航平铺、单列布局、字号缩放、按钮全宽）
+✅ 桌面端无浮动咨询按钮
+✅ 移动端汉堡菜单全屏覆盖（无 backdrop-filter 陷阱）
+✅ 菜单关闭 3 条路径（X / 点链接 / ESC）
+✅ 菜单底部 action 栏（登入/注册 + 主CTA）
+✅ Hero 单列上下居中（无左右分栏）
+✅ 数据网格等高对齐（min-height + nowrap + margin-top auto）
+✅ CTA 联系区左对齐 / Hero/数据看板居中 / 末尾单按钮居中
+✅ 末尾孤立单元格跨满列（无单格贴左侧）
+✅ Footer 2 列均匀分布、二维码上下堆叠
+✅ 移动端底部固定栏（登入/注册 + 主CTA，含 safe-area）
 ✅ Claude Code 预览验证通过（桌面端 + 移动端）
 
 🖥️ 预览方式：
